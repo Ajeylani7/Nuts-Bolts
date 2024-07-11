@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global style reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 1700px;
+  margin: auto;
+}
+
+/* Custom CSS for search bar */
+@layer components {
+  .search-bar {
+    transition: width 0.3s ease-in-out;
+  }
+
+  .search-bar:hover {
+    width: 300px;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Add responsive grid */
+.responsive-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, 1fr); /* Default 4 columns */
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 1200px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns for medium screens */
+  }
+}
+
+@media (max-width: 900px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for small screens */
+  }
+}
+
+@media (max-width: 600px) {
+  .responsive-grid {
+    grid-template-columns: repeat(
+      1,
+      1fr
+    ); /* 1 column for extra small screens */
+  }
+}
