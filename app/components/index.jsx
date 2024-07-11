@@ -16,6 +16,7 @@ import {
   Divider,
 } from "@nextui-org/react";
 import { Image } from "@nextui-org/react";
+import { getTableData } from "../../public/utils/database";
 
 // The main functional component for displaying products.
 export default function Products() {
@@ -30,36 +31,24 @@ export default function Products() {
 
   // useEffect to run client-side logic for fetching products data.
   useEffect(() => {
-    // Try to get the 'products' data from localStorage.
-    const initialProducts = localStorage.getItem("products");
-    // If found, update the 'products' state with the data from localStorage.
-    if (initialProducts) {
-      setProducts(JSON.parse(initialProducts));
-    } else {
-      // If not found, initialize with placeholders.
-      const placeholders = Array.from({ length: 24 }, (_, index) => ({
-        id: index,
-        name: `Product ${index + 1}`,
-        description: "This is a placeholder description for the product.",
-        price: "$100",
-        details: "Hi",
-        imageUrl: "/gallery/bd2.svg",
-      }));
-      setProducts(placeholders);
-      // Save the placeholders to localStorage.
-      localStorage.setItem("products", JSON.stringify(placeholders));
+    async function fetchProducts() {
+      const data = await getTableData("products");
+      setProducts(data);
     }
+    fetchProducts();
   }, []);
 
   // Function to handle the purchase of a product.
   const handleBuy = (product) => {
     // Check if the product is already in the cart.
-    const existingItem = cartItems.find((item) => item.id === product.id);
+    const existingItem = cartItems.find(
+      (item) => item.productCode === product.productCode
+    );
     if (existingItem) {
       // If it is, update the quantity of the existing product in the cart.
       setCartItems((prevItems) =>
         prevItems.map((item) =>
-          item.id === product.id
+          item.productCode === product.productCode
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
@@ -74,25 +63,25 @@ export default function Products() {
   };
 
   // Function to handle quantity change of a product in the cart.
-  const handleQuantityChange = (productId, quantity) => {
+  const handleQuantityChange = (productCode, quantity) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
+        item.productCode === productCode ? { ...item, quantity } : item
       )
     );
   };
 
   // Function to handle removal of a product from the cart.
-  const handleRemoveItem = (productId) => {
+  const handleRemoveItem = (productCode) => {
     setCartItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
+      prevItems.filter((item) => item.productCode !== productCode)
     );
   };
 
   return (
     <div className="bg-background rounded-lg">
       {/* Display products slider */}
-      <ProductSlider />
+      <ProductSlider products={products} />
       <Divider className="my-4 mt-12" />
       <div
         className="responsive-grid grid grid-cols-4 gap-8 mt-8 mb-8 rounded-lg shadow-lg"
@@ -101,7 +90,7 @@ export default function Products() {
         {/* Display products */}
         {products.slice(0, 24).map((product) => (
           <Card
-            key={product.id}
+            key={product.productCode}
             className="space-y-5 p-4 relative flex flex-col"
             radius="lg"
             color="#f3f4f6"
@@ -109,16 +98,18 @@ export default function Products() {
             <div className="mb-auto">
               <Image
                 isBlurred
-                src={product.imageUrl}
-                alt={product.name}
+                src={product.imageUrl || "/gallery/bd2.svg"}
+                alt={product.productName}
                 classNames="m-5"
                 style={{ width: "400px", height: "300px", objectFit: "cover" }}
               />
             </div>
             <div className="space-y-3 text-center">
-              <div className="text-xl font-semibold">{product.name}</div>
-              <div className="text-sm text-gray-600">{product.description}</div>
-              <div className="text-lg text-gray-800">{product.price}</div>
+              <div className="text-xl font-semibold">{product.productName}</div>
+              <div className="text-sm text-gray-600">
+                {product.productDescription}
+              </div>
+              <div className="text-lg text-gray-800">{product.buyPrice}</div>
             </div>
             <Button
               auto
@@ -134,7 +125,7 @@ export default function Products() {
         {/* Display skeleton loaders if products length is less than 24 */}
         {Array.from({ length: 24 - products.length }, (_, index) => (
           <Card
-            key={index + products.length}
+            key={`skeleton-${index}`}
             className="space-y-5 p-4 relative flex flex-col"
             radius="lg"
             color="#F3F4F6"
@@ -155,18 +146,18 @@ export default function Products() {
                   {/* Display items in the cart */}
                   {cartItems.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.productCode}
                       className="flex justify-between items-center mb-4"
                     >
                       <div>
                         <p>
-                          <strong>Name:</strong> {item.name}
+                          <strong>Name:</strong> {item.productName}
                         </p>
                         <p>
-                          <strong>Price:</strong> {item.price}
+                          <strong>Price:</strong> {item.buyPrice}
                         </p>
                         <p>
-                          <strong>Details:</strong> {item.details}
+                          <strong>Details:</strong> {item.productDescription}
                         </p>
                       </div>
                       <div className="flex items-center">
@@ -175,7 +166,7 @@ export default function Products() {
                           value={item.quantity}
                           onChange={(e) =>
                             handleQuantityChange(
-                              item.id,
+                              item.productCode,
                               parseInt(e.target.value)
                             )
                           }
@@ -192,7 +183,7 @@ export default function Products() {
                           auto
                           size="mini"
                           className="ml-2"
-                          onClick={() => handleRemoveItem(item.id)}
+                          onClick={() => handleRemoveItem(item.productCode)}
                         >
                           Delete
                         </Button>

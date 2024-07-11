@@ -9,15 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@nextui-org/react": "^2.4.1",
+    "@nextui-org/react": "^2.4.2",
+    "@react-aria/focus": "^3.17.1",
     "@studio-freight/lenis": "^1.0.42",
     "framer-motion": "^11.2.10",
+    "idb": "^8.0.0",
     "next": "^14.2.5",
     "react": "^18",
     "react-dom": "^18",
     "react-slick": "^0.30.2",
     "sharp": "^0.33.4",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "sql-wasm": "^1.1.4",
+    "sql.js": "^1.10.3",
+    "sql.js-httpvfs": "^0.8.12",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
