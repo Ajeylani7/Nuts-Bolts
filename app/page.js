@@ -1,11 +1,13 @@
 "use client"; // Indicate that this component should be rendered client-side
-import Index from "./components/index";
+import Hero from "./components/hero";
+import ProductSlider from "./components/productslider";
 
 // Main functional component for the home page
 export default function Home() {
   return (
     <main>
-      <Index />
+      <ProductSlider />
+      <Hero />
     </main>
   );
 }

@@ -38,8 +38,11 @@ export default function Nav() {
   return (
     // Navbar container with Tailwind CSS classes for styling
     <nav
-      className="flex justify-between items-center p-4 bg-white shadow-lg sticky top-0 z-50 mt-2 rounded-lg  "
-      style={{ maxWidth: "1700px", marginTop: "1%" }}
+      className="flex justify-between items-center p-4 bg-white  sticky top-0 z-50 mt-2 rounded-b-lg "
+      style={{
+        maxWidth: "1700px",
+        boxShadow: "0 50px 50px -50px rgba(0,0,0,0.3)",
+      }}
     >
       {/* Logo container with an onClick event to scroll to the top */}
       <div className="logo" onClick={scrollToTop}>

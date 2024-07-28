@@ -1,5 +1,5 @@
 "use client";
-import ProductSlider from "./productslider";
+
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -13,10 +13,12 @@ import {
   useDisclosure,
   Select,
   SelectItem,
-  Divider,
+  Tabs,
+  Tab,
 } from "@nextui-org/react";
 import { Image } from "@nextui-org/react";
 import { getTableData } from "../../public/utils/database";
+import icon from "/public/gallery/icon.png";
 
 // The main functional component for displaying products.
 export default function Products() {
@@ -28,6 +30,8 @@ export default function Products() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   // State variable for the selected product to show in the modal.
   const [selectedProduct, setSelectedProduct] = useState(null);
+  // State to track the liked items
+  const [likedItems, setLikedItems] = useState(new Set());
 
   // useEffect to run client-side logic for fetching products data.
   useEffect(() => {
@@ -78,48 +82,111 @@ export default function Products() {
     );
   };
 
+  // Function to handle like/unlike of a product.
+  const handleLike = (productCode) => {
+    setLikedItems((prevLikes) => {
+      const newLikes = new Set(prevLikes);
+      if (newLikes.has(productCode)) {
+        newLikes.delete(productCode);
+      } else {
+        newLikes.add(productCode);
+      }
+      return newLikes;
+    });
+  };
+
   return (
-    <div className="bg-background rounded-lg">
-      {/* Display products slider */}
-      <ProductSlider products={products} />
-      <Divider className="my-4 mt-12" />
-      <div
-        className="responsive-grid grid grid-cols-4 gap-8 mt-8 mb-8 rounded-lg shadow-lg"
-        style={{ maxWidth: "1700px", padding: "20px" }}
-      >
+    <div className="w-full mx-auto p-5 pb-20" style={{ maxWidth: "1700px" }}>
+      <h1 className="text-left text-4xl font-bold bg-gradient-to-r from-black to-blue-600 bg-clip-text text-transparent mb-4">
+        AUTO PARTS COLLECTION
+      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <Tabs
+          aria-label="Product Tabs"
+          radius="full"
+          className="w-full space-x-4"
+        >
+          <Tab
+            key="all"
+            title="All"
+            className="text-lg px-6 py-2"
+            isSelectedClass="bg-blue-600 text-white"
+          />
+          <Tab
+            key="popular"
+            title="Popular"
+            className="text-lg px-6 py-2"
+            isSelectedClass="bg-blue-600 text-white"
+          />
+          <Tab
+            key="new"
+            title="New"
+            className="text-lg px-6 py-2"
+            isSelectedClass="bg-blue-600 text-white"
+          />
+          <Tab
+            key="sale"
+            title="Sale"
+            className="text-lg px-6 py-2"
+            isSelectedClass="bg-blue-600 text-white"
+          />
+        </Tabs>
+        <Select label="Sort by" placeholder="Select" className="max-w-xs">
+          <SelectItem key="highest" value="highest">
+            Highest Price
+          </SelectItem>
+          <SelectItem key="lowest" value="lowest">
+            Lowest Price
+          </SelectItem>
+        </Select>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-8 mb-8 rounded-lg">
         {/* Display products */}
         {products.slice(0, 24).map((product) => (
           <Card
             key={product.productCode}
-            className="space-y-5 p-4 relative flex flex-col"
+            className="p-4 relative flex flex-col bg-imageCardBackground"
             radius="lg"
-            color="#f3f4f6"
           >
-            <div className="mb-auto">
+            <div className="relative mb-4">
               <Image
                 isBlurred
                 src={product.imageUrl || "/gallery/bd2.svg"}
                 alt={product.productName}
-                classNames="m-5"
-                style={{ width: "400px", height: "300px", objectFit: "cover" }}
+                className="w-full h-56 object-cover rounded-lg"
               />
+              <button
+                onClick={() => handleLike(product.productCode)}
+                className="absolute top-2 right-2 bg-white/70 rounded-full p-1"
+              >
+                <Image
+                  src={icon.src}
+                  alt="Heart Icon"
+                  className={`h-5 w-5 ${
+                    likedItems.has(product.productCode)
+                      ? "fill-current text-black"
+                      : ""
+                  }`}
+                />
+              </button>
             </div>
-            <div className="space-y-3 text-center">
-              <div className="text-xl font-semibold">{product.productName}</div>
-              <div className="text-sm text-gray-600">
-                {product.productDescription}
+            <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+              <div className="flex flex-col">
+                <div className="text-sm font-semibold">
+                  {product.productName}
+                </div>
+                <div className="text-lg text-gray-800">{product.buyPrice}$</div>
               </div>
-              <div className="text-lg text-gray-800">{product.buyPrice}</div>
+              <Button
+                auto
+                size="tiny"
+                className="rounded-full"
+                color="primary"
+                onClick={() => handleBuy(product)}
+              >
+                Buy
+              </Button>
             </div>
-            <Button
-              auto
-              size="tiny"
-              className=" w-full"
-              color="primary"
-              onClick={() => handleBuy(product)}
-            >
-              Buy
-            </Button>
           </Card>
         ))}
         {/* Display skeleton loaders if products length is less than 24 */}
@@ -130,7 +197,7 @@ export default function Products() {
             radius="lg"
             color="#F3F4F6"
           >
-            <Skeleton className="mb-auto h-[300px] w-[300px] rounded-lg"></Skeleton>
+            <Skeleton className="mb-auto h-[200px] w-full rounded-lg"></Skeleton>
             <Skeleton className="w-3/5 rounded-lg h-3"></Skeleton>
             <Skeleton className="w-4/5 rounded-lg h-3"></Skeleton>
             <Skeleton className="w-2/5 rounded-lg h-3"></Skeleton>

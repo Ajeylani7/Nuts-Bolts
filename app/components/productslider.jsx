@@ -1,126 +1,74 @@
 "use client";
-import React, { useState } from "react";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import {
-  Card,
-  Image,
-  Button,
-  CardHeader,
-  CardFooter,
-  Divider,
-} from "@nextui-org/react";
+import React from "react";
+import Image from "next/image";
+import ms1 from "/public/gallery/ms1.png";
+import en1 from "/public/gallery/en1.png";
+import arrow from "/public/gallery/arrow2.png";
+import { Card, Button, CardFooter } from "@nextui-org/react";
 
-// Main functional component for displaying a product slider
 export default function ProductSlider() {
-  // Sample product data with random auto parts images
-  const products = [
-    {
-      id: 1,
-      name: "Engine Oil",
-      description: "Premium quality engine oil for better performance.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1643700973089-baa86a1ab9ee?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: 2,
-      name: "Brake Pads",
-      description: "High-performance brake pads for enhanced safety.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1517524206127-48bbd363f3d7?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: 3,
-      name: "Air Filter",
-      description: "Efficient air filters to improve engine life.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1615906655593-ad0386982a0f?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: 4,
-      name: "Spark Plugs",
-      description: "Reliable spark plugs for better ignition.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1527383418406-f85a3b146499?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-  ];
-
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  // Settings for the react-slick slider
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3,
-    centerMode: true,
-    centerPadding: "0px",
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 5000,
-    beforeChange: (current, next) => setActiveSlide(next),
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          centerPadding: "40px",
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          centerPadding: "20px",
-        },
-      },
-    ],
-  };
-
   return (
-    <div className="w-full mt-4 mb-4 relative rounded-lg">
-      <Slider {...settings}>
-        {products.map((product, index) => (
-          <div
-            key={product.id}
-            className={`relative p-5 transition-transform ease-in-out duration-500 ${
-              activeSlide === index ? "scale-105" : "scale-90"
-            }`}
-            style={{ width: activeSlide === index ? "80%" : "20%" }}
+    <div className="w-full mx-auto p-5 pb-20 ">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+        <div className="flex flex-col justify-between">
+          <div className="text-left text-4xl font-bold bg-gradient-to-r from-black to-blue-600 bg-clip-text text-transparent mb-4">
+            AUTO PARTS MADE SIMPLE
+          </div>
+          <div className="text-left text-lg mb-4">
+            Welcome to our auto parts store, your one-stop destination for
+            premium quality automotive parts. Our products are sourced from top
+            manufacturers to ensure reliability and performance.
+          </div>
+          <Button
+            size="lg"
+            className="bg-primaryButton text-white hover:bg-blue-500 transition duration-300 mb-8 w-[150px] rounded-full font-semibold"
           >
-            <Card className="w-full h-[300px] overflow-hidden rounded-lg shadow-lg transition-transform ease-in-out duration-500">
-              <CardHeader className="absolute z-10 top-2 left-2 bg-black/40 rounded-md p-1 text-white text-xs font-bold">
-                🔧 Recommended
-              </CardHeader>
+            Browse Parts
+          </Button>
+          <div className="relative transition-transform ease-in-out duration-500 mt-4">
+            <Card className="w-full h-[300px] md:h-[100%] overflow-hidden rounded-3xl shadow-lg transition-transform ease-in-out duration-500 bg-imageCardBackground">
               <Image
-                src={product.imageUrl}
-                alt={product.name}
+                src={ms1}
+                alt="Product Image"
                 className="w-full h-full object-cover"
               />
-              <CardFooter className="absolute bg-black/40 bottom-0 z-10 border-t border-default-600 dark:border-default-100 flex justify-between items-center">
-                <div className="flex flex-grow gap-2 items-center">
-                  <div className="flex flex-col">
-                    <h1 className="text-white text-xl font-bold">
-                      {product.name}
-                    </h1>
-                    <p className="text-white text-sm">{product.description}</p>
-                  </div>
-                </div>
+            </Card>
+          </div>
+        </div>
+        <div className="flex flex-col justify-between">
+          <div className="relative transition-transform ease-in-out duration-500">
+            <Card className="w-full h-[300px] md:h-[100%] overflow-hidden rounded-3xl shadow-lg transition-transform ease-in-out duration-500 bg-imageCardBackground">
+              <Image
+                src={en1}
+                alt="Product Image"
+                className="w-full h-full object-cover"
+              />
+              <CardFooter className="absolute bottom-0 z-10 flex justify-between items-center w-full p-4">
                 <Button
-                  radius="full"
-                  size="sm"
-                  className="bg-primary text-white hover:bg-primary transition duration-300"
+                  size="lg"
+                  className="bg-secondaryButton text-white hover:bg-primaryButton transition duration-300 rounded-full"
                 >
-                  Learn More
+                  Engine Parts
                 </Button>
+                <div
+                  className="bg-arrowButtonBackground text-black hover:bg-gray-200 transition duration-300 rounded-full w-12 h-12 flex items-center justify-center transform "
+                  style={{ transform: "rotate(-40deg)", cursor: "pointer" }}
+                >
+                  <Image src={arrow} alt="Arrow Icon" className="w-6 h-6" />
+                </div>
               </CardFooter>
             </Card>
           </div>
-        ))}
-      </Slider>
+          <div className="relative p-5 bg-infoCardBackground rounded-3xl h-[100px] md:h-[30%] flex items-center justify-center mt-8 md:mt-4">
+            <div className="text-center text-white text-xl">
+              Discover our wide range of auto parts that combine quality with
+              affordability. Transform your vehicle with top-notch parts that
+              promise enhanced performance and longevity. Shop now and
+              experience the difference.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
