@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getTableData } from "../../public/utils/database";
+import { getTableData } from "../../public/database";
 
 export default function ProductTable() {
   const [products, setProducts] = useState([]);

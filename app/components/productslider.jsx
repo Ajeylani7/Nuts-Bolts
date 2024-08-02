@@ -8,7 +8,7 @@ import { Card, Button, CardFooter } from "@nextui-org/react";
 
 export default function ProductSlider() {
   return (
-    <div className="w-full mx-auto p-5 pb-20 ">
+    <div className="w-full mx-auto p-12 pb-20 ">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
         <div className="flex flex-col justify-between">
           <div className="text-left text-4xl font-bold bg-gradient-to-r from-black to-blue-600 bg-clip-text text-transparent mb-4">

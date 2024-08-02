@@ -17,8 +17,18 @@ import {
   Tab,
 } from "@nextui-org/react";
 import { Image } from "@nextui-org/react";
-import { getTableData } from "../../public/utils/database";
+import { getTableData } from "../../public/database"; // Ensure this path is correct
 import icon from "/public/gallery/icon.png";
+
+// Helper function to calculate the discounted price
+const getDiscountedPrice = (price, discount) => {
+  return (price - (price * discount) / 100).toFixed(2);
+};
+
+// Helper function to generate a random discount percentage
+const getRandomDiscount = () => {
+  return Math.floor(Math.random() * 21) + 10; // Random discount between 10% and 30%
+};
 
 // The main functional component for displaying products.
 export default function Products() {
@@ -28,28 +38,38 @@ export default function Products() {
   const [cartItems, setCartItems] = useState([]);
   // useDisclosure hook for managing the modal state.
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const {
+    isOpen: isReceiptOpen,
+    onOpen: onReceiptOpen,
+    onOpenChange: onReceiptOpenChange,
+  } = useDisclosure();
   // State variable for the selected product to show in the modal.
   const [selectedProduct, setSelectedProduct] = useState(null);
   // State to track the liked items
   const [likedItems, setLikedItems] = useState(new Set());
+  const [activeTab, setActiveTab] = useState("all");
+  const [sortOrder, setSortOrder] = useState("none");
 
   // useEffect to run client-side logic for fetching products data.
   useEffect(() => {
     async function fetchProducts() {
-      const data = await getTableData("products");
-      setProducts(data);
+      try {
+        const data = await getTableData("products");
+        console.log("Fetched products:", data); // Debugging log
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error); // Error handling
+      }
     }
     fetchProducts();
   }, []);
 
   // Function to handle the purchase of a product.
   const handleBuy = (product) => {
-    // Check if the product is already in the cart.
     const existingItem = cartItems.find(
       (item) => item.productCode === product.productCode
     );
     if (existingItem) {
-      // If it is, update the quantity of the existing product in the cart.
       setCartItems((prevItems) =>
         prevItems.map((item) =>
           item.productCode === product.productCode
@@ -58,10 +78,8 @@ export default function Products() {
         )
       );
     } else {
-      // If not, add the product to the cart.
       setCartItems((prevItems) => [...prevItems, { ...product, quantity: 1 }]);
     }
-    // Set the selected product and open the modal.
     setSelectedProduct(product);
     onOpen();
   };
@@ -95,43 +113,77 @@ export default function Products() {
     });
   };
 
+  const totalAmount = cartItems.reduce(
+    (total, item) => total + item.buyPrice * item.quantity,
+    0
+  );
+
+  const handleCheckout = () => {
+    onOpenChange(false);
+    onReceiptOpen();
+  };
+
+  const filteredProducts = products
+    .filter(
+      (product) => activeTab === "all" || product.keywords.includes(activeTab)
+    )
+    .sort((a, b) => {
+      if (sortOrder === "highest") return b.buyPrice - a.buyPrice;
+      if (sortOrder === "lowest") return a.buyPrice - b.buyPrice;
+      return 0;
+    });
+
   return (
     <div className="w-full mx-auto p-5 pb-20" style={{ maxWidth: "1700px" }}>
-      <h1 className="text-left text-4xl font-bold bg-gradient-to-r from-black to-blue-600 bg-clip-text text-transparent mb-4">
+      <h1
+        className="text-left text-2xl font-bold bg-clip-text text-transparent mb-4"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, #051937, #132950, #213a6a, #304c85, #405ea1)",
+        }}
+      >
         AUTO PARTS COLLECTION
       </h1>
       <div className="flex justify-between items-center mb-8">
         <Tabs
           aria-label="Product Tabs"
           radius="full"
-          className="w-full space-x-4"
+          className="w-full space-x-2"
+          selectedKey={activeTab}
+          onSelectionChange={setActiveTab}
         >
           <Tab
             key="all"
             title="All"
-            className="text-lg px-6 py-2"
+            className="text-sm px-4 py-1 text-blue-600"
             isSelectedClass="bg-blue-600 text-white"
           />
           <Tab
             key="popular"
             title="Popular"
-            className="text-lg px-6 py-2"
+            className="text-sm px-4 py-1 text-blue-600"
             isSelectedClass="bg-blue-600 text-white"
           />
           <Tab
             key="new"
             title="New"
-            className="text-lg px-6 py-2"
+            className="text-sm px-4 py-1 text-blue-600"
             isSelectedClass="bg-blue-600 text-white"
           />
           <Tab
             key="sale"
             title="Sale"
-            className="text-lg px-6 py-2"
+            className="text-sm px-4 py-1 text-blue-600"
             isSelectedClass="bg-blue-600 text-white"
           />
         </Tabs>
-        <Select label="Sort by" placeholder="Select" className="max-w-xs">
+
+        <Select
+          label="Sort by"
+          placeholder="Select"
+          className="max-w-xs"
+          onChange={(e) => setSortOrder(e.target.value)}
+        >
           <SelectItem key="highest" value="highest">
             Highest Price
           </SelectItem>
@@ -141,133 +193,168 @@ export default function Products() {
         </Select>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-8 mb-8 rounded-lg">
-        {/* Display products */}
-        {products.slice(0, 24).map((product) => (
-          <Card
-            key={product.productCode}
-            className="p-4 relative flex flex-col bg-imageCardBackground"
-            radius="lg"
-          >
-            <div className="relative mb-4">
-              <Image
-                isBlurred
-                src={product.imageUrl || "/gallery/bd2.svg"}
-                alt={product.productName}
-                className="w-full h-56 object-cover rounded-lg"
-              />
-              <button
-                onClick={() => handleLike(product.productCode)}
-                className="absolute top-2 right-2 bg-white/70 rounded-full p-1"
-              >
+        {filteredProducts.length > 0 ? (
+          filteredProducts.slice(0, 24).map((product) => (
+            <Card
+              key={product.productCode}
+              className="p-4 relative flex flex-col bg-imageCardBackground"
+              radius="lg"
+            >
+              <div className="relative mb-4">
                 <Image
-                  src={icon.src}
-                  alt="Heart Icon"
-                  className={`h-5 w-5 ${
-                    likedItems.has(product.productCode)
-                      ? "fill-current text-black"
-                      : ""
-                  }`}
+                  isBlurred
+                  src={product.imageUrl || "/gallery/bd2.svg"}
+                  alt={product.productName}
+                  className="w-full h-56 object-cover rounded-lg"
                 />
-              </button>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-              <div className="flex flex-col">
-                <div className="text-sm font-semibold">
-                  {product.productName}
-                </div>
-                <div className="text-lg text-gray-800">{product.buyPrice}$</div>
-              </div>
-              <Button
-                auto
-                size="tiny"
-                className="rounded-full"
-                color="primary"
-                onClick={() => handleBuy(product)}
-              >
-                Buy
-              </Button>
-            </div>
-          </Card>
-        ))}
-        {/* Display skeleton loaders if products length is less than 24 */}
-        {Array.from({ length: 24 - products.length }, (_, index) => (
-          <Card
-            key={`skeleton-${index}`}
-            className="space-y-5 p-4 relative flex flex-col"
-            radius="lg"
-            color="#F3F4F6"
-          >
-            <Skeleton className="mb-auto h-[200px] w-full rounded-lg"></Skeleton>
-            <Skeleton className="w-3/5 rounded-lg h-3"></Skeleton>
-            <Skeleton className="w-4/5 rounded-lg h-3"></Skeleton>
-            <Skeleton className="w-2/5 rounded-lg h-3"></Skeleton>
-          </Card>
-        ))}
-        {/* Modal for displaying the cart */}
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader className="flex flex-col gap-1">Cart</ModalHeader>
-                <ModalBody>
-                  {/* Display items in the cart */}
-                  {cartItems.map((item) => (
-                    <div
-                      key={item.productCode}
-                      className="flex justify-between items-center mb-4"
+                <div className="absolute top-2 right-2 flex flex-col space-y-1">
+                  {product.keywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      className={`px-2 py-1 rounded-full text-xs text-white ${
+                        keyword === "sale" ? "bg-red-500" : "bg-blue-500"
+                      }`}
                     >
-                      <div>
-                        <p>
-                          <strong>Name:</strong> {item.productName}
-                        </p>
-                        <p>
-                          <strong>Price:</strong> {item.buyPrice}
-                        </p>
-                        <p>
-                          <strong>Details:</strong> {item.productDescription}
-                        </p>
-                      </div>
-                      <div className="flex items-center">
-                        <Select
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleQuantityChange(
-                              item.productCode,
-                              parseInt(e.target.value)
-                            )
-                          }
-                        >
-                          {/* Select options for quantity */}
-                          {[...Array(10).keys()].map((i) => (
-                            <SelectItem key={i + 1} value={i + 1}>
-                              {i + 1}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                        <Button
-                          color="danger"
-                          auto
-                          size="mini"
-                          className="ml-2"
-                          onClick={() => handleRemoveItem(item.productCode)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
+                      {keyword}
+                    </span>
                   ))}
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="primary" onPress={onClose}>
-                    Checkout
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+                <div className="flex flex-col">
+                  <div className="text-sm font-semibold">
+                    {product.productName}
+                  </div>
+                  {product.keywords.includes("sale") ? (
+                    <div className="text-lg text-gray-800">
+                      <span className="line-through mr-2">
+                        ${product.buyPrice}
+                      </span>
+                      <span className="text-red-500">
+                        $
+                        {getDiscountedPrice(
+                          product.buyPrice,
+                          getRandomDiscount()
+                        )}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-lg text-gray-800">
+                      ${product.buyPrice}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  auto
+                  size="tiny"
+                  className="rounded-full"
+                  color="primary"
+                  onClick={() => handleBuy(product)}
+                >
+                  Buy
+                </Button>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <p>Loading products...</p>
+        )}
       </div>
+      {/* Modal for displaying the cart */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Cart</ModalHeader>
+              <ModalBody>
+                {cartItems.map((item) => (
+                  <div
+                    key={item.productCode}
+                    className="flex justify-between items-center mb-4 p-4 bg-gray-100 rounded-lg shadow"
+                  >
+                    <div>
+                      <p className="font-bold">{item.productName}</p>
+                      <p className="text-gray-700">${item.buyPrice} each</p>
+                    </div>
+                    <div className="flex items-center">
+                      <Select
+                        placeholder="Qty"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            item.productCode,
+                            parseInt(e.target.value)
+                          )
+                        }
+                        className="w-16"
+                        defaultValue={item.quantity}
+                      >
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <SelectItem key={i} value={i}>
+                            {i}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                      <Button
+                        color="danger"
+                        auto
+                        size="mini"
+                        className="ml-2"
+                        onClick={() => handleRemoveItem(item.productCode)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </ModalBody>
+              <ModalFooter className="flex justify-between items-center">
+                <div className="text-lg font-bold">
+                  Total: ${totalAmount.toFixed(2)}
+                </div>
+                <Button color="primary" onPress={handleCheckout}>
+                  Checkout
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      {/* Modal for displaying the receipt */}
+      <Modal isOpen={isReceiptOpen} onOpenChange={onReceiptOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Receipt</ModalHeader>
+              <ModalBody>
+                <p className="text-lg font-bold">
+                  Thank you for your purchase!
+                </p>
+                {cartItems.map((item) => (
+                  <div
+                    key={item.productCode}
+                    className="flex justify-between items-center mb-4 p-4 bg-gray-100 rounded-lg shadow"
+                  >
+                    <div>
+                      <p className="font-bold">{item.productName}</p>
+                      <p className="text-gray-700">${item.buyPrice} each</p>
+                      <p className="text-gray-700">Quantity: {item.quantity}</p>
+                    </div>
+                  </div>
+                ))}
+              </ModalBody>
+              <ModalFooter className="flex justify-between items-center">
+                <div className="text-lg font-bold">
+                  Total: ${totalAmount.toFixed(2)}
+                </div>
+                <Button color="primary" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
