@@ -4,30 +4,55 @@ import React, { useEffect, useState } from "react";
 import {
   Card,
   Button,
-  Skeleton,
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Select,
-  SelectItem,
   Tabs,
   Tab,
+  Select,
+  SelectItem,
 } from "@nextui-org/react";
 import { Image } from "@nextui-org/react";
 import { getTableData } from "../../public/database"; // Ensure this path is correct
-import icon from "/public/gallery/icon.png";
 
 // Helper function to calculate the discounted price
 const getDiscountedPrice = (price, discount) => {
   return (price - (price * discount) / 100).toFixed(2);
 };
 
-// Helper function to generate a random discount percentage
-const getRandomDiscount = () => {
-  return Math.floor(Math.random() * 21) + 10; // Random discount between 10% and 30%
+// Image map for the product codes
+const imageMap = {
+  EN01: "engine_oil.png",
+  BP01: "brake_pads.png",
+  RT01: "brake_rotors.png",
+  AF01: "air_filter.png",
+  SP01: "spark_plug.png",
+  TF01: "transmission_fluid.png",
+  OF01: "oil_filter.png",
+  BC01: "battery_charger.png",
+  W01: "wipers.png",
+  HF01: "headlights.png",
+  BF01: "brake_fluid.png",
+  CS01: "coolant_system.png",
+  RS01: "radiator_support.png",
+  IS01: "ignition.png",
+  AT01: "alternator.png",
+  SW01: "steering.png",
+  TW01: "wheel.png",
+  EB01: "exhaust.png",
+  FS01: "fuel.png",
+  SC01: "suspension.png",
+  BR01: "brake_rotors.png",
+  HT01: "hose.png",
+  FS02: "fuel_injector.png",
+  WP01: "water_pump.png",
+};
+
+const getImagePath = (productCode) => {
+  return `/gallery/${imageMap[productCode]}`;
 };
 
 // The main functional component for displaying products.
@@ -113,10 +138,12 @@ export default function Products() {
     });
   };
 
-  const totalAmount = cartItems.reduce(
-    (total, item) => total + item.buyPrice * item.quantity,
-    0
-  );
+  const totalAmount = cartItems.reduce((total, item) => {
+    const price = item.keywords.includes("sale")
+      ? getDiscountedPrice(item.buyPrice, 25)
+      : item.buyPrice;
+    return total + price * item.quantity;
+  }, 0);
 
   const handleCheckout = () => {
     onOpenChange(false);
@@ -133,6 +160,11 @@ export default function Products() {
       return 0;
     });
 
+  const resetCart = () => {
+    setCartItems([]);
+    onReceiptOpenChange(false);
+  };
+
   return (
     <div className="w-full mx-auto p-5 pb-20" style={{ maxWidth: "1700px" }}>
       <h1
@@ -144,37 +176,37 @@ export default function Products() {
       >
         AUTO PARTS COLLECTION
       </h1>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 ">
         <Tabs
           aria-label="Product Tabs"
           radius="full"
-          className="w-full space-x-2"
+          className="w-full space-x-2 "
           selectedKey={activeTab}
           onSelectionChange={setActiveTab}
         >
           <Tab
             key="all"
-            title="All"
-            className="text-sm px-4 py-1 text-blue-600"
+            title="ALL"
+            className="text-sm px-4 py-1"
             isSelectedClass="bg-blue-600 text-white"
           />
           <Tab
             key="popular"
-            title="Popular"
+            title="POPULAR"
             className="text-sm px-4 py-1 text-blue-600"
             isSelectedClass="bg-blue-600 text-white"
           />
           <Tab
             key="new"
-            title="New"
-            className="text-sm px-4 py-1 text-blue-600"
-            isSelectedClass="bg-blue-600 text-white"
+            title="NEW"
+            className="text-sm px-4 py-1 text-green-600"
+            isSelectedClass="bg-green-600 text-white"
           />
           <Tab
             key="sale"
-            title="Sale"
-            className="text-sm px-4 py-1 text-blue-600"
-            isSelectedClass="bg-blue-600 text-white"
+            title="SALE"
+            className="text-sm px-4 py-1 text-red-600"
+            isSelectedClass="bg-red-600 text-white"
           />
         </Tabs>
 
@@ -183,6 +215,7 @@ export default function Products() {
           placeholder="Select"
           className="max-w-xs"
           onChange={(e) => setSortOrder(e.target.value)}
+          defaultValue=""
         >
           <SelectItem key="highest" value="highest">
             Highest Price
@@ -203,22 +236,10 @@ export default function Products() {
               <div className="relative mb-4">
                 <Image
                   isBlurred
-                  src={product.imageUrl || "/gallery/bd2.svg"}
+                  src={getImagePath(product.productCode)}
                   alt={product.productName}
                   className="w-full h-56 object-cover rounded-lg"
                 />
-                <div className="absolute top-2 right-2 flex flex-col space-y-1">
-                  {product.keywords.map((keyword, index) => (
-                    <span
-                      key={index}
-                      className={`px-2 py-1 rounded-full text-xs text-white ${
-                        keyword === "sale" ? "bg-red-500" : "bg-blue-500"
-                      }`}
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
               </div>
               <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
                 <div className="flex flex-col">
@@ -231,11 +252,7 @@ export default function Products() {
                         ${product.buyPrice}
                       </span>
                       <span className="text-red-500">
-                        $
-                        {getDiscountedPrice(
-                          product.buyPrice,
-                          getRandomDiscount()
-                        )}
+                        ${getDiscountedPrice(product.buyPrice, 25)}
                       </span>
                     </div>
                   ) : (
@@ -272,13 +289,33 @@ export default function Products() {
                     key={item.productCode}
                     className="flex justify-between items-center mb-4 p-4 bg-gray-100 rounded-lg shadow"
                   >
-                    <div>
-                      <p className="font-bold">{item.productName}</p>
-                      <p className="text-gray-700">${item.buyPrice} each</p>
+                    <div className="flex items-center">
+                      <Image
+                        src={getImagePath(item.productCode)}
+                        alt={item.productName}
+                        width={100}
+                        height={100}
+                        className="mr-4"
+                      />
+                      <div>
+                        <p className="font-bold">{item.productName}</p>
+                        {item.keywords.includes("sale") ? (
+                          <p className="text-gray-700">
+                            <span className="line-through mr-2">
+                              ${item.buyPrice}
+                            </span>
+                            <span className="text-red-500">
+                              ${getDiscountedPrice(item.buyPrice, 25)}
+                            </span>
+                          </p>
+                        ) : (
+                          <p className="text-gray-700">${item.buyPrice}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center">
-                      <Select
-                        placeholder="Qty"
+                      <select
+                        className="p-2 border rounded"
                         value={item.quantity}
                         onChange={(e) =>
                           handleQuantityChange(
@@ -286,15 +323,13 @@ export default function Products() {
                             parseInt(e.target.value)
                           )
                         }
-                        className="w-16"
-                        defaultValue={item.quantity}
                       >
                         {[1, 2, 3, 4, 5].map((i) => (
-                          <SelectItem key={i} value={i}>
+                          <option key={i} value={i}>
                             {i}
-                          </SelectItem>
+                          </option>
                         ))}
-                      </Select>
+                      </select>
                       <Button
                         color="danger"
                         auto
@@ -309,7 +344,7 @@ export default function Products() {
                 ))}
               </ModalBody>
               <ModalFooter className="flex justify-between items-center">
-                <div className="text-lg font-bold">
+                <div className="text-lg font-bold ">
                   Total: ${totalAmount.toFixed(2)}
                 </div>
                 <Button color="primary" onPress={handleCheckout}>
@@ -321,33 +356,70 @@ export default function Products() {
         </ModalContent>
       </Modal>
       {/* Modal for displaying the receipt */}
-      <Modal isOpen={isReceiptOpen} onOpenChange={onReceiptOpenChange}>
+      <Modal
+        isOpen={isReceiptOpen}
+        onOpenChange={(open) => {
+          if (!open) resetCart();
+          onReceiptOpenChange(open);
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Receipt</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1 text-center">
+                Receipt
+              </ModalHeader>
               <ModalBody>
-                <p className="text-lg font-bold">
+                <p className="text-lg text-center">
                   Thank you for your purchase!
                 </p>
-                {cartItems.map((item) => (
-                  <div
-                    key={item.productCode}
-                    className="flex justify-between items-center mb-4 p-4 bg-gray-100 rounded-lg shadow"
-                  >
-                    <div>
-                      <p className="font-bold">{item.productName}</p>
-                      <p className="text-gray-700">${item.buyPrice} each</p>
-                      <p className="text-gray-700">Quantity: {item.quantity}</p>
+                <Card className="p-4 bg-gray-100 rounded-lg shadow">
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.productCode}
+                      className="flex justify-between items-center mb-4"
+                    >
+                      <div className="flex items-center">
+                        <Image
+                          src={getImagePath(item.productCode)}
+                          alt={item.productName}
+                          width={80}
+                          height={80}
+                          className="mr-4"
+                        />
+                        <div>
+                          <p className="font-bold">{item.productName}</p>
+                          {item.keywords.includes("sale") ? (
+                            <p className="text-gray-700">
+                              <span className="line-through mr-2">
+                                ${item.buyPrice}
+                              </span>
+                              <span className="text-red-500">
+                                ${getDiscountedPrice(item.buyPrice, 25)}
+                              </span>
+                            </p>
+                          ) : (
+                            <p className="text-gray-700">${item.buyPrice}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="bg-blue-400 p-2 rounded text-center w-8 h-8 flex items-center justify-center text-white">
+                        {item.quantity}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </Card>
               </ModalBody>
               <ModalFooter className="flex justify-between items-center">
-                <div className="text-lg font-bold">
+                <div className="text-lg font-bold ">
                   Total: ${totalAmount.toFixed(2)}
                 </div>
-                <Button color="primary" onPress={onClose}>
+                <Button
+                  color="primary"
+                  onPress={() => {
+                    resetCart();
+                  }}
+                >
                   Close
                 </Button>
               </ModalFooter>

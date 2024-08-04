@@ -1,24 +1,28 @@
-// /public/database.js
 export async function loadDatabase() {
   try {
-    const response = await fetch("./data.json"); // Ensure this path is correct
+    console.log("Fetching data.json...");
+    const response = await fetch("./data.json");
     if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`);
+      throw new Error("Failed to fetch data");
     }
     const data = await response.json();
-    console.log("Database loaded successfully:", data); // Debugging log
+    console.log("Data fetched successfully:", data);
     return data;
   } catch (error) {
     console.error("Error loading database:", error);
-    throw error;
+    throw error; // Re-throw the error so it can be caught in the calling function
   }
 }
 
 export async function getTableData(tableName) {
-  const db = await loadDatabase();
-  console.log("Fetched table data for:", tableName, db[tableName]); // Debugging log
-  if (db && db[tableName]) {
-    return db[tableName];
+  try {
+    const db = await loadDatabase();
+    if (db && db[tableName]) {
+      return db[tableName];
+    }
+    return [];
+  } catch (error) {
+    console.error(`Error getting table data for ${tableName}:`, error);
+    return []; // Return an empty array in case of error
   }
-  return [];
 }
