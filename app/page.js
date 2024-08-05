@@ -1,13 +1,21 @@
-"use client"; // Indicate that this component should be rendered client-side
+"use client";
+import { useState } from "react";
+import Nav from "./components/nav";
 import Hero from "./components/hero";
 import ProductSlider from "./components/productslider";
 
-// Main functional component for the home page
 export default function Home() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
   return (
     <main>
+      <Nav onSearch={handleSearch} />
       <ProductSlider />
-      <Hero />
+      <Hero searchQuery={searchQuery} />
     </main>
   );
 }

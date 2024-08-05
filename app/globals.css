@@ -71,3 +71,8 @@ body {
     ); /* 1 column for extra small screens */
   }
 }
+/* Add this CSS to your global styles or the specific component styles */
+.highlight {
+  background-color: yellow;
+  transition: background-color 0.5s ease;
+}

@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
         <NextUIProvider>
           <div>
             <SmoothScroller />
-            <Nav />
+
             {children}
             <Footer />
           </div>

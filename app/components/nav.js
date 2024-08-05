@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import Image from "next/image"; // Ensure correct import
 import {
   Input,
   Avatar,
@@ -9,59 +10,87 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  Tabs,
-  Tab,
+  ModalFooter,
+  useDisclosure,
   Button,
   Card,
+  Tabs,
+  Tab,
 } from "@nextui-org/react";
+import { registerUser, loginUser } from "../../public/auth";
 
-// Custom hook to manage modal state
-function useDisclosure() {
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onOpenChange = (open) => setIsOpen(open);
-
-  return { isOpen, onOpen, onOpenChange };
-}
-
-export default function Nav() {
-  // State to keep track of the scroll position
+export default function Nav({ onSearch }) {
+  const router = useRouter();
   const [scrollPosition, setScrollPosition] = useState(0);
-  // State to keep track of the blur level
   const [blur, setBlur] = useState(0);
-  // State to manage the modal visibility
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  // State for the selected tab in the modal
+  const {
+    isOpen: isCartOpen,
+    onOpen: onCartOpen,
+    onOpenChange: onCartOpenChange,
+  } = useDisclosure();
   const [selected, setSelected] = useState("login");
+  const [cartItems, setCartItems] = useState([]);
+  const [user, setUser] = useState(null);
+  const [isAccountCreated, setIsAccountCreated] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // useEffect hook to add a scroll event listener when the component mounts
   useEffect(() => {
-    // Function to handle the scroll event
     const handleScroll = () => {
-      // Update the scroll position state with the current scroll position
       setScrollPosition(window.scrollY);
-      // Calculate and set the blur level based on the scroll position
       setBlur(Math.min(window.scrollY / 100, 10));
     };
 
-    // Add the scroll event listener
     window.addEventListener("scroll", handleScroll);
-    // Cleanup function to remove the scroll event listener when the component unmounts
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
-  // Function to scroll the page to the top smoothly
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.email.value;
+    const password = form.password.value;
+
+    try {
+      const data = await loginUser(email, password);
+      setUser(data.user);
+      onOpenChange(false); // Close the login modal
+      router.push("/userpage"); // Redirect to user page
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const email = form.email.value;
+    const password = form.password.value;
+
+    try {
+      const data = await registerUser(name, email, password);
+      setIsAccountCreated(true);
+      setSelected("login");
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    router.push("/");
+  };
+
+  const handleSearch = (e) => {
+    if (e.key === "Enter") {
+      onSearch(searchQuery);
+    }
   };
 
   return (
-    // Navbar container with Tailwind CSS classes for styling
     <nav
       className="flex justify-between items-center p-4 bg-white sticky top-0 z-50 mt-2 rounded-b-lg "
       style={{
@@ -69,8 +98,7 @@ export default function Nav() {
         boxShadow: "0 50px 50px -50px rgba(0,0,0,0.3)",
       }}
     >
-      {/* Logo container with an onClick event to scroll to the top */}
-      <div className="logo" onClick={scrollToTop}>
+      <div className="logo" onClick={() => router.push("/")}>
         <Image
           src="/gallery/logonb.png"
           alt="N&B Logo"
@@ -81,7 +109,6 @@ export default function Nav() {
           className="transition duration-300 transform hover:scale-90 cursor-pointer"
         />
       </div>
-      {/* Search bar container with a transition for width change on hover */}
       <div className="relative mx-4 transition-all duration-300 ease-in-out transform hover:w-64 w-40">
         <Input
           clearable
@@ -89,21 +116,34 @@ export default function Nav() {
           fullWidth
           bordered
           className="mx-2"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleSearch}
         />
       </div>
-      {/* Avatar and badge container with hover effects */}
       <div className="avatar flex gap-4 items-center">
-        <Badge content="5" color="danger" shape="circle">
-          <Avatar
-            isBordered
-            radius="full"
-            src="https://i.pravatar.cc/150?u=a04258a2462d826712d"
-            className="transition duration-300 transform hover:scale-110 cursor-pointer"
-            onClick={onOpen}
-          />
-        </Badge>
+        {user ? (
+          <Badge color="primary" shape="circle">
+            <Avatar
+              text={user.name.charAt(0).toUpperCase()}
+              isBordered
+              radius="full"
+              className="transition duration-300 transform hover:scale-110 cursor-pointer"
+              onClick={onCartOpen}
+            />
+          </Badge>
+        ) : (
+          <Badge color="danger" shape="circle">
+            <Avatar
+              isBordered
+              radius="full"
+              text="?"
+              className="transition duration-300 transform hover:scale-110 cursor-pointer"
+              onClick={onOpen}
+            />
+          </Badge>
+        )}
       </div>
-      {/* Modal for login and sign-up */}
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           <Card className="w-full">
@@ -119,16 +159,18 @@ export default function Nav() {
                 onSelectionChange={setSelected}
               >
                 <Tab key="login" title="Login">
-                  <form className="flex flex-col gap-4">
+                  <form className="flex flex-col gap-4" onSubmit={handleLogin}>
                     <Input
                       isRequired
                       label="Email"
+                      name="email"
                       placeholder="Enter your email"
                       type="email"
                     />
                     <Input
                       isRequired
                       label="Password"
+                      name="password"
                       placeholder="Enter your password"
                       type="password"
                     />
@@ -142,28 +184,34 @@ export default function Nav() {
                       </a>
                     </p>
                     <div className="flex gap-2 justify-end">
-                      <Button fullWidth color="primary">
+                      <Button fullWidth color="primary" type="submit">
                         Login
                       </Button>
                     </div>
                   </form>
                 </Tab>
                 <Tab key="sign-up" title="Sign up">
-                  <form className="flex flex-col gap-4">
+                  <form
+                    className="flex flex-col gap-4"
+                    onSubmit={handleRegister}
+                  >
                     <Input
                       isRequired
                       label="Name"
+                      name="name"
                       placeholder="Enter your name"
                     />
                     <Input
                       isRequired
                       label="Email"
+                      name="email"
                       placeholder="Enter your email"
                       type="email"
                     />
                     <Input
                       isRequired
                       label="Password"
+                      name="password"
                       placeholder="Enter your password"
                       type="password"
                     />
@@ -177,7 +225,7 @@ export default function Nav() {
                       </a>
                     </p>
                     <div className="flex gap-2 justify-end">
-                      <Button fullWidth color="primary">
+                      <Button fullWidth color="primary" type="submit">
                         Sign up
                       </Button>
                     </div>
@@ -185,6 +233,68 @@ export default function Nav() {
                 </Tab>
               </Tabs>
             </ModalBody>
+          </Card>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={isCartOpen} onOpenChange={onCartOpenChange}>
+        <ModalContent>
+          <Card className="w-full">
+            <ModalHeader className="flex flex-col gap-1 text-center">
+              Your Cart
+            </ModalHeader>
+            <ModalBody>
+              {cartItems.length > 0 ? (
+                cartItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center mb-4"
+                  >
+                    <span>{item.name}</span>
+                    <span>{item.quantity}</span>
+                  </div>
+                ))
+              ) : (
+                <p>Your cart is empty</p>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                onClick={() => {
+                  router.push("/userpage");
+                  onCartOpenChange(false);
+                }}
+              >
+                Go to user page
+              </Button>
+              <Button color="danger" onClick={handleLogout}>
+                Logout
+              </Button>
+            </ModalFooter>
+          </Card>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={isAccountCreated} onOpenChange={setIsAccountCreated}>
+        <ModalContent>
+          <Card className="w-full">
+            <ModalHeader className="flex flex-col gap-1 text-center">
+              Account Created Successfully
+            </ModalHeader>
+            <ModalBody>
+              <p>
+                Your account has been created successfully. You can now log in.
+              </p>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                onClick={() => {
+                  setIsAccountCreated(false);
+                  onOpen();
+                  setSelected("login");
+                }}
+              >
+                Login
+              </Button>
+            </ModalFooter>
           </Card>
         </ModalContent>
       </Modal>

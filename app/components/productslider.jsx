@@ -6,9 +6,17 @@ import en1 from "/public/gallery/en1.png";
 import arrow from "/public/gallery/arrow2.png";
 import { Card, Button, CardFooter } from "@nextui-org/react";
 
-export default function ProductSlider() {
+const ProductSlider = () => {
+  const handleScroll = (event, targetId) => {
+    event.preventDefault();
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <div className="w-full mx-auto p-12 pb-20 ">
+    <div className="w-full mx-auto p-12 pb-20">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
         <div className="flex flex-col justify-between">
           <div className="text-left text-4xl font-bold bg-gradient-to-r from-black to-blue-600 bg-clip-text text-transparent mb-4">
@@ -22,6 +30,7 @@ export default function ProductSlider() {
           <Button
             size="lg"
             className="bg-primaryButton text-white hover:bg-blue-500 transition duration-300 mb-8 w-[150px] rounded-full font-semibold"
+            onClick={(e) => handleScroll(e, "products-section")}
           >
             Browse Parts
           </Button>
@@ -47,12 +56,14 @@ export default function ProductSlider() {
                 <Button
                   size="lg"
                   className="bg-secondaryButton text-white hover:bg-primaryButton transition duration-300 rounded-full"
+                  onClick={(e) => handleScroll(e, "products-section")}
                 >
                   Engine Parts
                 </Button>
                 <div
-                  className="bg-arrowButtonBackground text-black hover:bg-gray-200 transition duration-300 rounded-full w-12 h-12 flex items-center justify-center transform "
+                  className="bg-arrowButtonBackground text-black hover:bg-gray-200 transition duration-300 rounded-full w-12 h-12 flex items-center justify-center transform"
                   style={{ transform: "rotate(-40deg)", cursor: "pointer" }}
+                  onClick={(e) => handleScroll(e, "products-section")}
                 >
                   <Image src={arrow} alt="Arrow Icon" className="w-6 h-6" />
                 </div>
@@ -71,4 +82,6 @@ export default function ProductSlider() {
       </div>
     </div>
   );
-}
+};
+
+export default ProductSlider;

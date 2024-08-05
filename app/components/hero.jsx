@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Card,
   Button,
@@ -56,7 +56,7 @@ const getImagePath = (productCode) => {
 };
 
 // The main functional component for displaying products.
-export default function Products() {
+export default function Products({ searchQuery }) {
   // State variable for storing product data.
   const [products, setProducts] = useState([]);
   // State variable for the cart items.
@@ -74,6 +74,7 @@ export default function Products() {
   const [likedItems, setLikedItems] = useState(new Set());
   const [activeTab, setActiveTab] = useState("all");
   const [sortOrder, setSortOrder] = useState("none");
+  const productsRef = useRef();
 
   // useEffect to run client-side logic for fetching products data.
   useEffect(() => {
@@ -88,6 +89,20 @@ export default function Products() {
     }
     fetchProducts();
   }, []);
+
+  // Scroll to the searched item and highlight it
+  useEffect(() => {
+    if (searchQuery) {
+      const productElement = document.getElementById(searchQuery.toLowerCase());
+      if (productElement) {
+        productElement.scrollIntoView({ behavior: "smooth" });
+        productElement.classList.add("highlight");
+        setTimeout(() => {
+          productElement.classList.remove("highlight");
+        }, 2000);
+      }
+    }
+  }, [searchQuery]);
 
   // Function to handle the purchase of a product.
   const handleBuy = (product) => {
@@ -125,19 +140,6 @@ export default function Products() {
     );
   };
 
-  // Function to handle like/unlike of a product.
-  const handleLike = (productCode) => {
-    setLikedItems((prevLikes) => {
-      const newLikes = new Set(prevLikes);
-      if (newLikes.has(productCode)) {
-        newLikes.delete(productCode);
-      } else {
-        newLikes.add(productCode);
-      }
-      return newLikes;
-    });
-  };
-
   const totalAmount = cartItems.reduce((total, item) => {
     const price = item.keywords.includes("sale")
       ? getDiscountedPrice(item.buyPrice, 25)
@@ -166,7 +168,11 @@ export default function Products() {
   };
 
   return (
-    <div className="w-full mx-auto p-5 pb-20" style={{ maxWidth: "1700px" }}>
+    <div
+      id="products-section"
+      className="w-full mx-auto p-5 pb-20"
+      style={{ maxWidth: "1700px" }}
+    >
       <h1
         className="text-left text-2xl font-bold bg-clip-text text-transparent mb-4"
         style={{
@@ -232,6 +238,7 @@ export default function Products() {
               key={product.productCode}
               className="p-4 relative flex flex-col bg-imageCardBackground"
               radius="lg"
+              id={product.productName.toLowerCase()}
             >
               <div className="relative mb-4">
                 <Image
